@@ -1,2 +1,6 @@
 # Load .env.development* files when running `wrangler dev`
 NEXTJS_ENV=development
+
+# Required for signed session cookies — must be a long random string (not empty)
+# Example: SESSION_SECRET=replace-with-a-long-random-string-at-least-32-characters
+SESSION_SECRET=
