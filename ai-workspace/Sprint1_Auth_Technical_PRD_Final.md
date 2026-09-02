@@ -1,6 +1,6 @@
 Date created: [25/08/2026]
 
-Date last modified: [31/08/2026 — Sprint 1 complete; deployed to production]
+Date last modified: [01/09/2026 — server-side /question-bank session protection]
 
 
 
@@ -386,7 +386,7 @@ Technical Implementation Details
 | Route | Type | Purpose |
 |-------|------|---------|
 | `/` | Static page | Login/Register form (`AuthForm`) |
-| `/question-bank` | Static page | Post-login landing; client-side session guard |
+| `/question-bank` | Server page | Post-login landing; server-side session guard via `getSessionUser()` |
 | `/api/register` | Dynamic API | Create user in D1, set session cookie |
 | `/api/login` | Dynamic API | Verify credentials, set session cookie |
 | `/api/logout` | Dynamic API | Clear session cookie |
@@ -399,11 +399,11 @@ No `/quiz` route exists (removed; out of scope).
 **Frontend**
 
 - `src/app/page.tsx` — Homepage; renders `AuthForm`
-- `src/app/question-bank/page.tsx` — Question bank landing page
+- `src/app/question-bank/page.tsx` — Server component; validates session and redirects before render
 - `src/components/auth/auth-form.tsx` — Login/Register toggle, client validation, API calls
 - `src/components/auth/auth-form.test.tsx` — Form validation and submit behavior tests
-- `src/components/question-bank/question-bank-landing.tsx` — Session check, welcome UI, logout
-- `src/components/question-bank/question-bank-landing.test.tsx` — Unauthenticated redirect test
+- `src/components/question-bank/question-bank-landing.tsx` — Welcome UI and logout (receives username from server)
+- `src/components/question-bank/question-bank-landing.test.tsx` — Authenticated landing UI test
 - `src/lib/auth-client.ts` — Fetch wrappers for auth APIs (`credentials: "include"`)
 
 **Backend / auth library**
@@ -417,6 +417,8 @@ No `/quiz` route exists (removed; out of scope).
 - `src/lib/auth/schemas.ts` — Zod schemas (register/login, confirm-password refine)
 - `src/lib/auth/password.ts` — PBKDF2-SHA256 hash and verify (`pbkdf2-sha256$...` format)
 - `src/lib/auth/session.ts` — Signed httpOnly `auth_session` cookie (7-day expiry); requires `SESSION_SECRET`
+- `src/lib/auth/server-session.ts` — Server-side session lookup (`cookies()` + D1 user load)
+- `src/lib/auth/server-session.test.ts` — Server session guard tests (no cookie, invalid token, valid user)
 - `src/lib/auth/api-response.ts` — JSON response + Set-Cookie helpers
 - `src/lib/services/users.ts` — D1 user queries via `getCloudflareContext().env.DB`
 - `src/lib/cloudflare-env.ts` — Typed Cloudflare env including `SESSION_SECRET`
@@ -440,7 +442,7 @@ No `/quiz` route exists (removed; out of scope).
 - **Session:** HMAC-signed payload in an httpOnly, `SameSite=Lax`, `Secure` (production) cookie — no sessions table.
 - **Register flow:** Validates `SESSION_SECRET` is configured *before* inserting a user row (prevents orphan users on session failure).
 - **Login:** Email + password only (username is stored but not accepted for login).
-- **Question bank protection:** Client-side only — `QuestionBankLanding` calls `GET /api/session` on mount and redirects to `/` if unauthenticated. No Next.js middleware or server component guard.
+- **Question bank protection:** Server-side — `src/app/question-bank/page.tsx` calls `getSessionUser()` and `redirect("/")` before rendering any client content. Unauthenticated users never see the landing page.
 - **Error handling:** Generic "Invalid email or password." on login failure; specific messages for registration validation (duplicate username/email, password mismatch).
 - **Dependencies added:** `zod`; Vitest + `@testing-library/react` + `jsdom` (dev).
 
@@ -465,13 +467,12 @@ Route (app)
 
 Acceptance Criteria (Definition of Done)
 
-Reviewed 31/08/2026 against implemented code, local D1, automated tests, and production deploy.
+Reviewed 01/09/2026 against implemented code, local D1, automated tests, and production deploy.
 
 - [x] Registration creates a real row in the D1 users table (verified by querying the database directly)
-  - **Local:** verified via `wrangler d1 execute --local`
-  - **Production:** remote migration **not yet applied** — run `npx wrangler d1 migrations apply ai-sprint-demo1-db --remote`
+  - Verified locally and on remote D1
 - [x] Passwords are stored hashed, never in plain text
-  - PBKDF2-SHA256 in `src/lib/auth/password.ts`; verified in register API tests
+  - PBKDF2-SHA256 at 100k iterations (Cloudflare Workers limit) in `src/lib/auth/password.ts`
 - [x] Registration form includes username, email, password, and confirm password fields
 - [x] Registration form blocks submission if password and confirm password don't match
   - Client-side block + Zod `refine` on server
@@ -483,14 +484,10 @@ Reviewed 31/08/2026 against implemented code, local D1, automated tests, and pro
   - Also redirects after successful registration
 - [x] /quiz route remains removed (out of Sprint 1/2 scope per prior feedback)
   - Confirmed absent from build output
+- [x] `/question-bank` is protected server-side for unauthenticated users
+  - `getSessionUser()` in server component; redirect before render; covered by `server-session.test.ts`
 - [x] All test cases below pass
-  - `npm test` — 11/11 passed
-
-**Production gaps (do not block code-complete status, but block live auth):**
-
-- [ ] Remote D1 migration applied and verified
-- [ ] `SESSION_SECRET` set in Cloudflare (`wrangler secret put SESSION_SECRET`)
-- [ ] End-to-end register/login smoke test on deployed URL (currently returns 500: session not configured)
+  - `npm test` — 15/15 passed (5 files, as of 01/09/2026)
 
 Success Metrics
 
@@ -515,9 +512,9 @@ Test Plan
 | 3 | Register with an email that already exists | Backend returns error, shown to user | **PASS** | `src/app/api/register/route.test.ts` |
 | 4 | Login with correct credentials | User authenticated, redirected to /question-bank | **PASS** | `src/app/api/login/route.test.ts`, `src/components/auth/auth-form.test.tsx` |
 | 5 | Login with invalid credentials (wrong password or unknown email) | Clear error shown, no redirect | **PASS** | `src/app/api/login/route.test.ts`, `src/components/auth/auth-form.test.tsx` |
-| 6 | Access /question-bank without being logged in | Redirected to login / blocked | **PASS** | `src/components/question-bank/question-bank-landing.test.tsx` |
+| 6 | Access /question-bank without being logged in | Redirected to login / blocked before page renders | **PASS** | `src/lib/auth/server-session.test.ts` |
 
-**Test run:** `npm test` — 4 files, 11 tests, all passed (31/08/2026)
+**Test run:** `npm test` — 5 files, 15 tests, all passed (01/09/2026)
 
 Additional test plan coverage (also passing):
 
@@ -561,15 +558,11 @@ Mitigation: Return specific, plain-language error messages from the API (e.g. "P
 
 Deployment Checkpoints
 
-- [ ] **Checkpoint 1:** D1 schema/migration deployed and verified remotely
-  - Local: applied. Remote: **pending** (`0001_create_users_table.sql`)
-- [x] **Checkpoint 2:** Backend APIs deployed
+- [x] **Checkpoint 1:** D1 schema/migration deployed and verified remotely
+- [x] **Checkpoint 2:** Backend APIs deployed and smoke-tested on production
   - Worker live at `https://ai-sprint-demo1.saroja-vaddireddy-dev.workers.dev`
-  - Live API smoke test blocked until remote migration + `SESSION_SECRET` are set
 - [x] **Checkpoint 3:** Frontend deployed (auth form with username + confirm password)
-  - Homepage and `/question-bank` return 200 on production
-- [ ] **Final Checkpoint:** Full end-to-end register/login on live URL
-  - Blocked on owner completing Checkpoint 1 and setting `SESSION_SECRET`
+- [x] **Final Checkpoint:** Full end-to-end register/login on live URL verified (after PBKDF2 iteration fix)
 
 Troubleshooting Guide
 
@@ -599,37 +592,30 @@ Known Limitations / Notes
 - **Rate limiting / brute-force protection** is not implemented.
 - **Login uses email + password only** — username cannot be used to log in (PRD user flow still mentions "email/username" for login; implementation is email-only).
 - **Session storage** uses a signed httpOnly cookie (no sessions table). Sessions expire after 7 days.
-- **`SESSION_SECRET` is required** in `.dev.vars` for local preview and must be set via `wrangler secret put SESSION_SECRET` for production. **Not yet set on production** as of deploy.
-- **D1 remote migration** (`0001_create_users_table.sql`) is **pending** on the remote database.
-- **`/question-bank` protection is client-side only** — unauthenticated users are redirected via a client `useEffect` calling `/api/session`; there is no server-side route guard or middleware.
+- **`SESSION_SECRET` is required** in `.dev.vars` for local preview and via `wrangler secret put SESSION_SECRET` for production.
 - **OpenNext on Windows** may have file-lock issues during build/deploy; stop `npm run preview` before deploying. WSL is recommended.
-- **Automated tests** use Vitest with mocked D1/API boundaries; full manual flow verified on `npm run preview` with local D1.
+- **Automated tests** use Vitest with mocked D1/API boundaries; full manual flow verified on `npm run preview` and production.
 
 ---
 
 Current Status
 
-**Last Updated**: 31/08/2026
+**Last Updated**: 01/09/2026
 
 **Current Phase**: All phases complete (Phase 5 — Final Review & Deploy)
 
-**Status**: COMPLETED (code + deploy) — production auth pending owner setup
+**Status**: COMPLETED — live auth working on production
 
 **Live URL:** https://ai-sprint-demo1.saroja-vaddireddy-dev.workers.dev
 
 **Completed:**
 
-- Phase 1: Database Schema — local migration applied and verified
+- Phase 1: Database Schema — local and remote migrations applied
 - Phase 2: Backend APIs — register, login, logout, session
 - Phase 3: Frontend Updates — auth form wired to real APIs
-- Phase 4: Testing — 11/11 automated tests passing
+- Phase 4: Testing — 15/15 automated tests passing
 - Phase 5: Final Review & Deploy — PRD updated, build succeeded, deployed to Cloudflare Workers
-
-**Owner action required for live authentication:**
-
-1. `npx wrangler d1 migrations apply ai-sprint-demo1-db --remote`
-2. `npx wrangler secret put SESSION_SECRET`
-3. Smoke-test register → `/question-bank` → logout on the live URL
+- **Post-sprint fix (01/09/2026):** Server-side session protection on `/question-bank` via `getSessionUser()` in page server component
 
 
 
