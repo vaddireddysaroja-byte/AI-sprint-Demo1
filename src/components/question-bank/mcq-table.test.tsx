@@ -53,12 +53,9 @@ describe("McqTable", () => {
 
 		expect(screen.getByRole("heading", { name: "No questions yet" })).toBeInTheDocument();
 		expect(
-			screen.getByText("Create your first multiple choice question to get started."),
+			screen.getByText("Create your first question using the button above."),
 		).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Create question" })).toHaveAttribute(
-			"href",
-			"/question-bank/mcq/new",
-		);
+		expect(screen.queryByRole("button", { name: "Create question" })).not.toBeInTheDocument();
 	});
 
 	it("renders MCQ rows with name and question columns", () => {

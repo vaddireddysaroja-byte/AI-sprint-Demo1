@@ -1,7 +1,6 @@
 "use client";
 
 import { MoreVertical } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -67,15 +66,8 @@ export function McqTable({ initialMcqs }: McqTableProps) {
 			<div className="border-border rounded-xl border border-dashed p-8 text-center">
 				<h2 className="text-lg font-medium">No questions yet</h2>
 				<p className="text-muted-foreground mt-2 text-sm">
-					Create your first multiple choice question to get started.
+					Create your first question using the button above.
 				</p>
-				<Button
-					className="mt-4"
-					nativeButton={false}
-					render={<Link href="/question-bank/mcq/new" />}
-				>
-					Create question
-				</Button>
 			</div>
 		);
 	}

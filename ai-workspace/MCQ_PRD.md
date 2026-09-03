@@ -376,7 +376,7 @@ Deliverables:
 - Updated `question-bank/page.tsx` and `question-bank-landing.tsx`
 - Component tests passing (4 tests across 2 files)
 
-Phase 5: Frontend — Create / Edit / Preview — PLANNED
+Phase 5: Frontend — Create / Edit / Preview — COMPLETED
 
 Objective: Build MCQ form and preview pages.
 
@@ -389,8 +389,12 @@ Tasks:
 
 Deliverables:
 
-- Create, edit, and preview pages working end-to-end
-- Component tests passing
+- `src/components/question-bank/mcq-form.tsx` + `mcq-form.test.tsx` (6 tests)
+- `src/components/question-bank/mcq-preview.tsx` + `mcq-preview.test.tsx` (4 tests)
+- `src/components/question-bank/mcq-page-shell.tsx` — shared page layout with back link
+- Pages: `mcq/new`, `mcq/[id]/edit`, `mcq/[id]/preview`
+- Save and Cancel buttons use equal-width `grid-cols-2` layout below the form
+- Empty state on question bank no longer duplicates the Create button
 
 Phase 6: Integration Testing & Deploy — PLANNED
 
@@ -479,12 +483,12 @@ Acceptance Criteria (Definition of Done)
 - [x] `/question-bank` shows a table of the signed-in user's MCQs with Name, Question, and Actions columns
 - [x] Create button navigates to `/question-bank/mcq/new`
 - [x] Row dropdown offers Edit, Preview, and Delete
-- [ ] Create/edit form shows 2 choices by default; supports 2–6 choices; exactly one correct answer required
-- [ ] Save persists to D1 and returns to question bank; Cancel returns without saving
-- [ ] Preview displays the question and records an attempt with correct/incorrect result
+- [x] Create/edit form shows 2 choices by default; supports 2–6 choices; exactly one correct answer required
+- [x] Save persists to D1 and returns to question bank; Cancel returns without saving
+- [x] Preview displays the question and records an attempt with correct/incorrect result
 - [x] Delete removes the MCQ (and choices) after confirmation
 - [x] Unauthenticated users cannot access MCQ pages or APIs
-- [x] All automated tests pass (`npm test`) — 46/46 as of 03/09/2026
+- [x] All automated tests pass (`npm test`) — 56/56 as of 03/09/2026
 - [x] `npm run lint` and `npm run build` succeed
 
 Success Metrics
@@ -571,11 +575,11 @@ Current Status
 
 **Last Updated**: 03/09/2026
 
-**Current Phase**: Phase 5 — Frontend Create / Edit / Preview (PLANNED)
+**Current Phase**: Phase 6 — Integration Testing & Deploy (PLANNED)
 
 **Branch**: `feature/mcq-crud`
 
-**Status**: IN PROGRESS — Phases 3 and 4 complete
+**Status**: IN PROGRESS — Phase 5 complete
 
 **Completed:**
 
@@ -584,6 +588,7 @@ Current Status
 - Phase 2: MCQ Service Layer — `src/lib/services/mcqs.ts` with 14 passing service tests
 - Phase 3: Backend APIs — `/api/mcqs` routes with auth, ownership, validation, and 12 API tests
 - Phase 4: Question Bank Table — `McqTable` with dropdown actions, delete dialog, server-fetched list
+- Phase 5: Create / Edit / Preview — `McqForm`, `McqPreview`, three new pages, 10 component tests
 
 Instructions for AI: When working with this PRD:
 
