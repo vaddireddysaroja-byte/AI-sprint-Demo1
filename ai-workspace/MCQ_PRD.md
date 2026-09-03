@@ -322,7 +322,7 @@ Deliverables:
 - Indexes verified: `idx_mcqs_created_by`, `idx_mcq_choices_mcq_id`, `idx_mcq_attempts_mcq_id`, `idx_mcq_attempts_user_id`
 - CASCADE verified: deleting an MCQ removes its choices; attempts block MCQ delete via FK (by design — service layer must delete attempts first or handle constraint in Phase 2)
 
-Phase 2: MCQ Service Layer — PLANNED
+Phase 2: MCQ Service Layer — COMPLETED
 
 Objective: Centralize D1 queries for MCQs, choices, and attempts.
 
@@ -335,7 +335,8 @@ Tasks:
 Deliverables:
 
 - `src/lib/services/mcqs.ts`
-- `src/lib/services/mcqs.test.ts` — tests passing
+- `src/lib/services/mcqs.test.ts` — 14 tests passing
+- `src/lib/services/mcqs.test-helpers.ts` — in-memory D1 mock for service tests
 
 Phase 3: Backend APIs — PLANNED
 
@@ -467,7 +468,7 @@ Technical Implementation Details
 Acceptance Criteria (Definition of Done)
 
 - [x] Migration creates `mcqs`, `mcq_choices`, and `mcq_attempts` tables locally
-- [ ] MCQ service layer covers list, create, read, update, delete, and record attempt
+- [x] MCQ service layer covers list, create, read, update, delete, and record attempt
 - [ ] All API endpoints enforce authentication and ownership
 - [ ] `/question-bank` shows a table of the signed-in user's MCQs with Name, Question, and Actions columns
 - [ ] Create button navigates to `/question-bank/mcq/new`
@@ -564,16 +565,17 @@ Current Status
 
 **Last Updated**: 03/09/2026
 
-**Current Phase**: Phase 2 — MCQ Service Layer (PLANNED)
+**Current Phase**: Phase 3 — Backend APIs (PLANNED)
 
 **Branch**: `feature/mcq-crud`
 
-**Status**: IN PROGRESS — Phase 1 complete
+**Status**: IN PROGRESS — Phase 2 complete
 
 **Completed:**
 
 - Sprint 1 auth (login, logout, session, `/question-bank` session guard)
 - Phase 1: Database Schema — migration `0002_create_mcq_tables.sql` applied locally; tables and indexes verified
+- Phase 2: MCQ Service Layer — `src/lib/services/mcqs.ts` with 14 passing service tests
 
 Instructions for AI: When working with this PRD:
 
