@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 
 import { QuestionBankLanding } from "@/components/question-bank/question-bank-landing";
 import { getSessionUser } from "@/lib/auth/server-session";
+import { toApiMcqListItem } from "@/lib/mcq/serializers";
+import { listMcqsByUser } from "@/lib/services/mcqs";
 
 export const metadata: Metadata = {
 	title: "Question Bank",
@@ -16,5 +18,7 @@ export default async function QuestionBankPage() {
 		redirect("/");
 	}
 
-	return <QuestionBankLanding username={user.username} />;
+	const mcqs = await listMcqsByUser(user.id);
+
+	return <QuestionBankLanding username={user.username} mcqs={mcqs.map(toApiMcqListItem)} />;
 }

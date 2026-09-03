@@ -71,7 +71,7 @@ export async function listMcqsByUser(userId: number): Promise<McqListItem[]> {
 	return result.results;
 }
 
-async function findMcqRecordById(id: number): Promise<McqRecord | null> {
+export async function findMcqRecordById(id: number): Promise<McqRecord | null> {
 	const db = await getDb();
 	const result = await db
 		.prepare(

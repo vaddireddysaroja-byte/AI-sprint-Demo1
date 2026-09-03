@@ -338,7 +338,7 @@ Deliverables:
 - `src/lib/services/mcqs.test.ts` — 14 tests passing
 - `src/lib/services/mcqs.test-helpers.ts` — in-memory D1 mock for service tests
 
-Phase 3: Backend APIs — PLANNED
+Phase 3: Backend APIs — COMPLETED
 
 Objective: Build REST endpoints backed by the MCQ service.
 
@@ -351,10 +351,13 @@ Tasks:
 
 Deliverables:
 
-- Working API routes with tests passing
-- Manual smoke-test results documented
+- `src/lib/mcq/schemas.ts`, `serializers.ts`, `require-session.ts`, `access.ts`
+- `src/app/api/mcqs/route.ts` — GET list, POST create
+- `src/app/api/mcqs/[id]/route.ts` — GET, PUT, DELETE
+- `src/app/api/mcqs/[id]/attempts/route.ts` — POST attempt
+- API route tests — 12 tests passing across 3 test files
 
-Phase 4: Frontend — Question Bank Table — PLANNED
+Phase 4: Frontend — Question Bank Table — COMPLETED
 
 Objective: Replace placeholder landing page with MCQ table and actions.
 
@@ -362,13 +365,16 @@ Tasks:
 
 - Add shadcn `dropdown-menu` component (`npx shadcn@latest add @shadcn/dropdown-menu`)
 - Create `McqTable` component with table, create button, row actions dropdown, delete confirmation dialog
-- Update `/question-bank` page to render the table (server-fetch MCQs or client fetch from GET `/api/mcqs`)
+- Update `/question-bank` page to render the table (server-fetch MCQs via `listMcqsByUser`)
 - Write component tests for table rendering, empty state, and action menu
 
 Deliverables:
 
-- Updated question bank UI
-- Component tests passing
+- `src/components/ui/dropdown-menu.tsx` — shadcn dropdown
+- `src/components/question-bank/mcq-table.tsx` + `mcq-table.test.tsx`
+- `src/lib/mcq-client.ts` — client fetch helpers for list/delete
+- Updated `question-bank/page.tsx` and `question-bank-landing.tsx`
+- Component tests passing (4 tests across 2 files)
 
 Phase 5: Frontend — Create / Edit / Preview — PLANNED
 
@@ -469,17 +475,17 @@ Acceptance Criteria (Definition of Done)
 
 - [x] Migration creates `mcqs`, `mcq_choices`, and `mcq_attempts` tables locally
 - [x] MCQ service layer covers list, create, read, update, delete, and record attempt
-- [ ] All API endpoints enforce authentication and ownership
-- [ ] `/question-bank` shows a table of the signed-in user's MCQs with Name, Question, and Actions columns
-- [ ] Create button navigates to `/question-bank/mcq/new`
-- [ ] Row dropdown offers Edit, Preview, and Delete
+- [x] All API endpoints enforce authentication and ownership
+- [x] `/question-bank` shows a table of the signed-in user's MCQs with Name, Question, and Actions columns
+- [x] Create button navigates to `/question-bank/mcq/new`
+- [x] Row dropdown offers Edit, Preview, and Delete
 - [ ] Create/edit form shows 2 choices by default; supports 2–6 choices; exactly one correct answer required
 - [ ] Save persists to D1 and returns to question bank; Cancel returns without saving
 - [ ] Preview displays the question and records an attempt with correct/incorrect result
-- [ ] Delete removes the MCQ (and choices) after confirmation
-- [ ] Unauthenticated users cannot access MCQ pages or APIs
-- [ ] All automated tests pass (`npm test`)
-- [ ] `npm run lint` and `npm run build` succeed
+- [x] Delete removes the MCQ (and choices) after confirmation
+- [x] Unauthenticated users cannot access MCQ pages or APIs
+- [x] All automated tests pass (`npm test`) — 46/46 as of 03/09/2026
+- [x] `npm run lint` and `npm run build` succeed
 
 Success Metrics
 
@@ -519,7 +525,7 @@ External Dependencies
 
 Internal Dependencies
 
-- shadcn/ui — `table`, `button`, `dialog`, `dropdown-menu` (to be added), `field`, `input`, `label`
+- shadcn/ui — `table`, `button`, `dialog`, `dropdown-menu`, `field`, `input`, `label`
 - Existing Next.js App Router and `/question-bank` route
 - Vitest + Testing Library (installed in Sprint 1)
 - Zod (installed in Sprint 1)
@@ -565,17 +571,19 @@ Current Status
 
 **Last Updated**: 03/09/2026
 
-**Current Phase**: Phase 3 — Backend APIs (PLANNED)
+**Current Phase**: Phase 5 — Frontend Create / Edit / Preview (PLANNED)
 
 **Branch**: `feature/mcq-crud`
 
-**Status**: IN PROGRESS — Phase 2 complete
+**Status**: IN PROGRESS — Phases 3 and 4 complete
 
 **Completed:**
 
 - Sprint 1 auth (login, logout, session, `/question-bank` session guard)
 - Phase 1: Database Schema — migration `0002_create_mcq_tables.sql` applied locally; tables and indexes verified
 - Phase 2: MCQ Service Layer — `src/lib/services/mcqs.ts` with 14 passing service tests
+- Phase 3: Backend APIs — `/api/mcqs` routes with auth, ownership, validation, and 12 API tests
+- Phase 4: Question Bank Table — `McqTable` with dropdown actions, delete dialog, server-fetched list
 
 Instructions for AI: When working with this PRD:
 
