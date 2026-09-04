@@ -4,6 +4,21 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { McqPreview } from "@/components/question-bank/mcq-preview";
 
+vi.mock("next/link", () => ({
+	default: ({
+		children,
+		href,
+		...props
+	}: {
+		children: React.ReactNode;
+		href: string;
+	}) => (
+		<a href={href} {...props}>
+			{children}
+		</a>
+	),
+}));
+
 vi.mock("@/lib/mcq-client", () => ({
 	recordMcqAttempt: vi.fn(),
 }));
@@ -36,7 +51,22 @@ describe("McqPreview", () => {
 		expect(screen.getByText("Venus")).toBeInTheDocument();
 	});
 
-	it("shows correct feedback after a correct attempt", async () => {
+	it("does not show feedback when only selecting an answer", async () => {
+		const user = userEvent.setup();
+		render(<McqPreview mcq={sampleMcq} />);
+
+		expect(screen.getByRole("button", { name: "Submit answer" })).toBeDisabled();
+
+		await user.click(screen.getByLabelText("Mercury"));
+
+		expect(screen.queryByRole("status")).not.toBeInTheDocument();
+		expect(screen.queryByText("Correct!")).not.toBeInTheDocument();
+		expect(screen.queryByText("Incorrect.")).not.toBeInTheDocument();
+		expect(recordMcqAttempt).not.toHaveBeenCalled();
+		expect(screen.getByRole("button", { name: "Submit answer" })).toBeEnabled();
+	});
+
+	it("shows correct feedback only after submitting", async () => {
 		const user = userEvent.setup();
 		vi.mocked(recordMcqAttempt).mockResolvedValue({ ok: true, isCorrect: true });
 
@@ -49,6 +79,8 @@ describe("McqPreview", () => {
 			expect(recordMcqAttempt).toHaveBeenCalledWith(3, 10);
 			expect(screen.getByRole("status")).toHaveTextContent("Correct!");
 		});
+
+		expect(screen.queryByRole("button", { name: "Submit answer" })).not.toBeInTheDocument();
 	});
 
 	it("shows incorrect feedback after a wrong attempt", async () => {
@@ -69,11 +101,33 @@ describe("McqPreview", () => {
 		const user = userEvent.setup();
 		render(<McqPreview mcq={sampleMcq} />);
 
-		await user.click(screen.getByRole("button", { name: "Submit answer" }));
+		const submitButton = screen.getByRole("button", { name: "Submit answer" });
+		expect(submitButton).toBeDisabled();
+
+		await user.click(submitButton);
 
 		expect(recordMcqAttempt).not.toHaveBeenCalled();
-		expect(await screen.findByRole("alert")).toHaveTextContent(
-			"Select an answer before submitting.",
-		);
+		expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+	});
+
+	it("lets the user try the question again after submitting", async () => {
+		const user = userEvent.setup();
+		vi.mocked(recordMcqAttempt).mockResolvedValue({ ok: true, isCorrect: false });
+
+		render(<McqPreview mcq={sampleMcq} />);
+
+		await user.click(screen.getByLabelText("Venus"));
+		await user.click(screen.getByRole("button", { name: "Submit answer" }));
+
+		await waitFor(() => {
+			expect(screen.getByRole("status")).toHaveTextContent("Incorrect.");
+		});
+
+		await user.click(screen.getByRole("button", { name: "Try this question again" }));
+
+		expect(screen.queryByRole("status")).not.toBeInTheDocument();
+		expect(screen.getByRole("button", { name: "Submit answer" })).toBeDisabled();
+		expect(screen.getByRole("radio", { name: /Mercury/i })).not.toBeChecked();
+		expect(screen.getByRole("radio", { name: /Venus/i })).not.toBeChecked();
 	});
 });
