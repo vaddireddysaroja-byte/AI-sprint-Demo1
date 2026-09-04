@@ -81,9 +81,16 @@ describe("McqPreview", () => {
 		});
 
 		expect(screen.queryByRole("button", { name: "Submit answer" })).not.toBeInTheDocument();
+		expect(
+			screen.queryByRole("button", { name: "Try this question again" }),
+		).not.toBeInTheDocument();
+		expect(screen.getByRole("link", { name: "Back to Question Bank" })).toHaveAttribute(
+			"href",
+			"/question-bank",
+		);
 	});
 
-	it("shows incorrect feedback after a wrong attempt", async () => {
+	it("shows try again only after an incorrect attempt", async () => {
 		const user = userEvent.setup();
 		vi.mocked(recordMcqAttempt).mockResolvedValue({ ok: true, isCorrect: false });
 
@@ -95,6 +102,9 @@ describe("McqPreview", () => {
 		await waitFor(() => {
 			expect(screen.getByRole("status")).toHaveTextContent("Incorrect.");
 		});
+
+		expect(screen.getByRole("button", { name: "Try this question again" })).toBeInTheDocument();
+		expect(screen.getByRole("link", { name: "Back to Question Bank" })).toBeInTheDocument();
 	});
 
 	it("requires a choice before submitting", async () => {

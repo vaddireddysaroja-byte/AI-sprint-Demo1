@@ -92,7 +92,7 @@ export function McqPreview({ mcq }: McqPreviewProps) {
 						<p
 							className={
 								feedback === "correct"
-									? "text-sm font-medium"
+									? "text-sm font-medium text-green-700 dark:text-green-400"
 									: "text-destructive text-sm font-medium"
 							}
 							role="status"
@@ -100,9 +100,11 @@ export function McqPreview({ mcq }: McqPreviewProps) {
 							{feedback === "correct" ? "Correct!" : "Incorrect."}
 						</p>
 						<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-							<Button type="button" variant="outline" onClick={handleTryAgain}>
-								Try this question again
-							</Button>
+							{feedback === "incorrect" ? (
+								<Button type="button" variant="outline" onClick={handleTryAgain}>
+									Try this question again
+								</Button>
+							) : null}
 							<Link
 								href="/question-bank"
 								className="text-muted-foreground hover:text-foreground text-sm underline underline-offset-4 transition-colors"
